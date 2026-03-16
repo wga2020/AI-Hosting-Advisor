@@ -3,1486 +3,586 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NotebookLM Prompt Generator - Estudio Creativo Profesional</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <title>NotebookLM Prompt Generator Pro</title>
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
-            --secondary: #7c3aed;
-            --accent: #f59e0b;
             --bg-dark: #0f172a;
-            --bg-card: #1e293b;
-            --bg-panel: #334155;
+            --bg-panel: #1e293b;
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --border: #475569;
-            --success: #10b981;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --border: #334155;
+            --success: #22c55e;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
+            background-color: var(--bg-dark);
             color: var(--text-primary);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        .app-container {
-            display: grid;
-            grid-template-columns: 280px 1fr 380px;
-            gap: 1px;
             height: 100vh;
-            background: var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
-        /* Panel Styles */
+        header {
+            background: var(--bg-panel);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 { font-size: 1.2rem; font-weight: 600; color: var(--accent); }
+        .badge { background: var(--border); padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem; }
+
+        /* Layout de 3 Paneles */
+        .main-container {
+            display: grid;
+            grid-template-columns: 250px 1fr 1fr;
+            flex: 1;
+            overflow: hidden;
+        }
+
         .panel {
-            background: var(--bg-dark);
-            overflow-y: auto;
-            position: relative;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
         .panel-header {
-            padding: 1.25rem;
-            border-bottom: 1px solid var(--border);
-            background: var(--bg-card);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .panel-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .panel-title svg {
-            width: 20px;
-            height: 20px;
-            color: var(--accent);
-        }
-
-        .panel-content {
             padding: 1rem;
+            background: rgba(30, 41, 59, 0.5);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         /* Panel 1: Historial */
+        #history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
         .history-item {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .history-item:hover {
-            border-color: var(--primary);
-            transform: translateX(4px);
-        }
-
-        .history-item.active {
-            border-color: var(--accent);
-            background: rgba(245, 158, 11, 0.1);
-        }
-
-        .history-category {
-            font-size: 0.75rem;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            background: var(--bg-panel);
+            padding: 0.8rem;
             margin-bottom: 0.5rem;
-        }
-
-        .history-preview {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .history-time {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 0.5rem;
-        }
-
-        .clear-history {
-            width: 100%;
-            padding: 0.75rem;
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
             border-radius: 6px;
             cursor: pointer;
-            font-size: 0.875rem;
+            border: 1px solid transparent;
             transition: all 0.2s;
-            margin-top: 1rem;
         }
 
-        .clear-history:hover {
-            background: var(--bg-panel);
-            color: var(--text-primary);
-        }
+        .history-item:hover { border-color: var(--accent); }
+        .history-item h4 { font-size: 0.85rem; margin-bottom: 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-item span { font-size: 0.75rem; color: var(--text-secondary); }
 
         /* Panel 2: Board Studio */
-        .studio-form {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .form-label {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .form-label svg {
-            width: 16px;
-            height: 16px;
-            color: var(--primary);
-        }
-
-        .form-input, .form-select, .form-textarea {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 0.875rem 1rem;
-            color: var(--text-primary);
-            font-family: inherit;
-            font-size: 0.9375rem;
-            transition: all 0.2s;
-        }
-
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
-        }
-
-        .form-textarea {
-            resize: vertical;
-            min-height: 120px;
-        }
-
-        .form-select {
-            cursor: pointer;
-        }
-
-        .color-palette-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 0.75rem;
-            margin-top: 0.5rem;
-        }
-
-        .palette-option {
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            padding: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .palette-option:hover {
-            border-color: var(--primary);
-        }
-
-        .palette-option.selected {
-            border-color: var(--accent);
-            background: rgba(245, 158, 11, 0.1);
-        }
-
-        .palette-colors {
-            display: flex;
-            gap: 4px;
-            height: 32px;
-            margin-bottom: 0.5rem;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .palette-color-swatch {
+        #studio-content {
             flex: 1;
-            height: 100%;
+            overflow-y: auto;
+            padding: 1.5rem;
         }
 
-        .palette-name {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        .advanced-options {
-            background: var(--bg-card);
+        .form-group { margin-bottom: 1.2rem; }
+        label { display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-secondary); }
+        
+        input[type="text"], select, textarea {
+            width: 100%;
+            background: var(--bg-dark);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
+            color: var(--text-primary);
+            padding: 0.7rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
         }
 
         .advanced-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
             cursor: pointer;
-            padding: 0.5rem 0;
-        }
-
-        .advanced-toggle-title {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-primary);
+            font-size: 0.8rem;
+            width: 100%;
+            text-align: left;
             display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            justify-content: space-between;
         }
 
-        .advanced-toggle-icon {
-            transition: transform 0.3s;
-        }
-
-        .advanced-toggle.active .advanced-toggle-icon {
-            transform: rotate(180deg);
-        }
-
-        .advanced-content {
-            margin-top: 1rem;
+        .advanced-options {
             display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 6px;
+            border: 1px solid var(--border);
         }
 
-        .advanced-content.active {
-            display: block;
-        }
+        .advanced-options.active { display: block; }
 
-        .custom-color-inputs {
+        .color-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
             gap: 1rem;
             margin-top: 1rem;
         }
 
-        .color-input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .color-input-label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .color-picker-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: var(--bg-panel);
-            padding: 0.5rem;
-            border-radius: 6px;
-        }
-
-        .color-picker {
-            width: 40px;
+        .color-picker-group { display: flex; flex-direction: column; gap: 0.3rem; }
+        .color-picker-group label { font-size: 0.7rem; }
+        input[type="color"] {
+            width: 100%;
             height: 40px;
             border: none;
-            border-radius: 4px;
             cursor: pointer;
-            background: transparent;
+            background: none;
         }
 
-        .color-hex {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.875rem;
-            color: var(--text-primary);
-            background: transparent;
+        .btn-generate {
+            width: 100%;
+            background: var(--accent);
+            color: var(--bg-dark);
             border: none;
-            width: 100px;
-        }
-
-        .generate-btn {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 1rem 1.5rem;
-            font-size: 1rem;
-            font-weight: 600;
+            padding: 1rem;
+            font-weight: 700;
+            border-radius: 6px;
             cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
             margin-top: 1rem;
-            box-shadow: var(--shadow);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: background 0.2s;
         }
 
-        .generate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-        }
+        .btn-generate:hover { background: var(--accent-hover); }
 
-        .generate-btn:active {
-            transform: translateY(0);
-        }
-
-        .generate-btn svg {
-            width: 20px;
-            height: 20px;
-        }
-
-        /* Panel 3: Prompt Generado */
-        .prompt-output {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1.25rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.875rem;
-            line-height: 1.7;
-            color: var(--text-secondary);
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            max-height: calc(100vh - 200px);
-            overflow-y: auto;
-        }
-
-        .prompt-output strong {
-            color: var(--accent);
-        }
-
-        .prompt-output em {
-            color: var(--primary);
+        /* Panel 3: Output */
+        #output-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            background: #0b1120;
         }
 
         .output-actions {
             display: flex;
-            gap: 0.75rem;
-            margin-top: 1rem;
-        }
-
-        .action-btn {
-            flex: 1;
-            padding: 0.875rem;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             gap: 0.5rem;
+            margin-bottom: 1rem;
         }
 
-        .copy-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-        }
-
-        .copy-btn:hover {
-            background: var(--primary-dark);
-        }
-
-        .export-btn {
-            background: transparent;
-            color: var(--text-secondary);
+        .btn-action {
+            flex: 1;
+            padding: 0.5rem;
             border: 1px solid var(--border);
-        }
-
-        .export-btn:hover {
             background: var(--bg-panel);
             color: var(--text-primary);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
         }
 
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: var(--text-muted);
-            text-align: center;
-            padding: 2rem;
-        }
+        .btn-action:hover { background: var(--border); }
+        .btn-copy { background: var(--success); color: white; border: none; }
+        .btn-copy:hover { opacity: 0.9; }
 
-        .empty-state svg {
-            width: 64px;
-            height: 64px;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
-
-        .empty-state p {
-            font-size: 0.9375rem;
+        #prompt-result {
+            flex: 1;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
             line-height: 1.6;
+            color: #e2e8f0;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .placeholder-text {
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: 3rem;
+            font-style: italic;
         }
 
         /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
 
-        ::-webkit-scrollbar-track {
-            background: var(--bg-dark);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--text-muted);
-        }
-
-        /* Loading Animation */
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 3rem;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Toast Notification */
-        .toast {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: var(--bg-card);
-            border: 1px solid var(--success);
-            color: var(--success);
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            box-shadow: var(--shadow-lg);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s;
-            z-index: 1000;
-        }
-
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        /* Responsive */
-        @media (max-width: 1200px) {
-            .app-container {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto 1fr auto;
-            }
-
-            .panel {
-                max-height: 50vh;
-            }
-        }
-
-        .category-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            background: var(--bg-panel);
-            border-radius: 20px;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-right: 0.5rem;
-        }
-
-        .format-selector {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-        }
-
-        .format-btn {
-            flex: 1;
-            padding: 0.625rem;
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text-secondary);
-            font-size: 0.8125rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .format-btn:hover {
-            background: var(--bg-card);
-            border-color: var(--primary);
-        }
-
-        .format-btn.active {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: white;
+        @media (max-width: 900px) {
+            .main-container { grid-template-columns: 1fr; grid-template-rows: auto 1fr 1fr; overflow-y: auto; }
+            .panel { border-right: none; border-bottom: 1px solid var(--border); height: auto; min-height: 400px; }
+            body { overflow: auto; height: auto; }
         }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Panel 1: Historial -->
-        <aside class="panel" id="historyPanel">
-            <div class="panel-header">
-                <h2 class="panel-title">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    Historial de Prompts
-                </h2>
+
+<header>
+    <h1>🎨 NotebookLM Prompt Architect</h1>
+    <span class="badge">v2.0 Professional</span>
+</header>
+
+<div class="main-container">
+    <!-- Panel 1: Historial -->
+    <div class="panel">
+        <div class="panel-header">Historial de Prompts</div>
+        <div id="history-list">
+            <!-- Items inyectados por JS -->
+            <div style="padding: 1rem; color: var(--text-secondary); font-size: 0.8rem; text-align: center;">
+                No hay historial reciente
             </div>
-            <div class="panel-content" id="historyContent">
-                <div class="empty-state">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                    </svg>
-                    <p>No hay prompts en el historial.<br>Genera tu primer prompt creativo.</p>
-                </div>
-                <button class="clear-history" id="clearHistoryBtn" style="display: none;">
-                    Limpiar Historial
-                </button>
-            </div>
-        </aside>
-
-        <!-- Panel 2: Board Studio -->
-        <main class="panel" id="studioPanel">
-            <div class="panel-header">
-                <h2 class="panel-title">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                    </svg>
-                    Board Studio
-                </h2>
-            </div>
-            <div class="panel-content">
-                <form class="studio-form" id="promptForm">
-                    <div class="form-group">
-                        <label class="form-label">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                            </svg>
-                            Temática del Proyecto
-                        </label>
-                        <textarea 
-                            class="form-textarea" 
-                            id="projectTheme" 
-                            placeholder="Describe la temática que quieres desarrollar en tu presentación, infografía o video. Sé lo más específico posible..."
-                            required
-                        ></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-                            </svg>
-                            Categoría
-                        </label>
-                        <select class="form-select" id="categorySelect" required>
-                            <option value="">Selecciona una categoría...</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Formato de Salida</label>
-                        <div class="format-selector">
-                            <button type="button" class="format-btn active" data-format="presentation">Presentación</button>
-                            <button type="button" class="format-btn" data-format="infographic">Infografía</button>
-                            <button type="button" class="format-btn" data-format="video">Video</button>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
-                            </svg>
-                            Paleta de Colores
-                        </label>
-                        <div class="color-palette-grid" id="paletteGrid"></div>
-                    </div>
-
-                    <div class="advanced-options">
-                        <div class="advanced-toggle" id="advancedToggle">
-                            <div class="advanced-toggle-title">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px; color: var(--accent);">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                </svg>
-                                Opciones Avanzadas
-                            </div>
-                            <svg class="advanced-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </div>
-                        <div class="advanced-content" id="advancedContent">
-                            <p style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1rem;">
-                                Personaliza cada color de la paleta seleccionada según tu preferencia.
-                            </p>
-                            <div class="custom-color-inputs" id="customColorInputs"></div>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="generate-btn">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                        Generar Prompt Maestro
-                    </button>
-                </form>
-            </div>
-        </main>
-
-        <!-- Panel 3: Prompt Generado -->
-        <aside class="panel" id="outputPanel">
-            <div class="panel-header">
-                <h2 class="panel-title">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Prompt Generado
-                </h2>
-            </div>
-            <div class="panel-content">
-                <div id="promptOutput" class="empty-state">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                    </svg>
-                    <p>Tu prompt maestro aparecerá aquí.<br>Completa el formulario y genera tu diseño.</p>
-                </div>
-                <div class="output-actions" id="outputActions" style="display: none;">
-                    <button class="action-btn copy-btn" id="copyBtn">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                        Copiar
-                    </button>
-                    <button class="action-btn export-btn" id="downloadBtn">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                        </svg>
-                        Descargar
-                    </button>
-                </div>
-            </div>
-        </aside>
+        </div>
     </div>
 
-    <div class="toast" id="toast">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-        </svg>
-        <span id="toastMessage">¡Copiado al portapapeles!</span>
+    <!-- Panel 2: Board Studio -->
+    <div class="panel">
+        <div class="panel-header">Board Studio</div>
+        <div id="studio-content">
+            <div class="form-group">
+                <label>Temática a Desarrollar</label>
+                <textarea id="topic" rows="3" placeholder="Ej: La evolución de la inteligencia artificial en la medicina moderna..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Formato de Salida</label>
+                <select id="format">
+                    <option value="presentacion">Presentación (Slides)</option>
+                    <option value="infografia">Infografía Editorial</option>
+                    <option value="video">Guion Visual para Video</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Categoría de Diseño</label>
+                <select id="category">
+                    <option value="" disabled selected>Selecciona una categoría...</option>
+                    <!-- Inyectado por JS -->
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Estilo de Paleta (Teoría del Color)</label>
+                <select id="palette">
+                    <option value="" disabled selected>Selecciona un estilo...</option>
+                    <!-- Inyectado por JS -->
+                </select>
+            </div>
+
+            <button class="advanced-toggle" onclick="toggleAdvanced()">
+                <span>Opciones Avanzadas (Personalizar Colores)</span>
+                <span>▼</span>
+            </button>
+
+            <div class="advanced-options" id="advanced-options">
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                    Personaliza los roles de color de la paleta seleccionada:
+                </p>
+                <div class="color-grid">
+                    <div class="color-picker-group">
+                        <label>Base</label>
+                        <input type="color" id="color-base" value="#ffffff">
+                    </div>
+                    <div class="color-picker-group">
+                        <label>Estructura</label>
+                        <input type="color" id="color-structure" value="#333333">
+                    </div>
+                    <div class="color-picker-group">
+                        <label>Acento Primario</label>
+                        <input type="color" id="color-accent1" value="#38bdf8">
+                    </div>
+                    <div class="color-picker-group">
+                        <label>Acento Contraste</label>
+                        <input type="color" id="color-accent2" value="#f43f5e">
+                    </div>
+                    <div class="color-picker-group">
+                        <label>Neutro</label>
+                        <input type="color" id="color-neutral" value="#94a3b8">
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-generate" onclick="generatePrompt()">Generar Prompt Profesional</button>
+        </div>
     </div>
 
-    <script src="app.js"></script>
-    <script>
-// NotebookLM Prompt Generator - JavaScript Application
+    <!-- Panel 3: Output -->
+    <div class="panel">
+        <div class="panel-header">Prompt Generado</div>
+        <div id="output-content">
+            <div class="output-actions">
+                <button class="btn-action btn-copy" onclick="copyToClipboard()">Copiar al Portapapeles</button>
+                <button class="btn-action" onclick="downloadPrompt()">Descargar .txt</button>
+            </div>
+            <div id="prompt-result">
+                <div class="placeholder-text">
+                    El prompt generado aparecerá aquí.<br>
+                    Configura las opciones en el Board Studio y presiona "Generar".
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-// ============================================
-// DATA: Categories and Color Palettes
-// ============================================
+<script>
+    // --- DATA ---
+    const categories = [
+        "Corporativo & Ejecutivo", "Tecnología & SaaS", "Finanzas & Cripto", 
+        "Salud & Bienestar", "Educación & E-Learning", "Moda & Lujo", 
+        "Gastronomía & Culinary", "Arquitectura & Interiorismo", "Arte & Cultura", 
+        "Medio Ambiente & Sostenibilidad", "Deportes & Fitness", "Viajes & Turismo", 
+        "Entretenimiento & Gaming", "Música & Festivales", "Política & Sociedad", 
+        "Ciencia & Investigación", "Startups & Innovación", "Real Estate", 
+        "Automotriz & Transporte", "Creativo & Experimental"
+    ];
 
-const categories = [
-    { id: 'corporate', name: 'Corporativo & Empresarial' },
-    { id: 'technology', name: 'Tecnología & Innovación' },
-    { id: 'education', name: 'Educación & Academia' },
-    { id: 'healthcare', name: 'Salud & Medicina' },
-    { id: 'finance', name: 'Finanzas & Economía' },
-    { id: 'marketing', name: 'Marketing & Publicidad' },
-    { id: 'architecture', name: 'Arquitectura & Diseño' },
-    { id: 'fashion', name: 'Moda & Lujo' },
-    { id: 'food', name: 'Gastronomía & Alimentación' },
-    { id: 'travel', name: 'Viajes & Turismo' },
-    { id: 'entertainment', name: 'Entretenimiento & Medios' },
-    { id: 'sports', name: 'Deportes & Fitness' },
-    { id: 'environment', name: 'Medio Ambiente & Sostenibilidad' },
-    { id: 'science', name: 'Ciencia & Investigación' },
-    { id: 'art', name: 'Arte & Cultura' },
-    { id: 'nonprofit', name: 'ONG & Sin Ánimo de Lucro' },
-    { id: 'legal', name: 'Legal & Consultoría' },
-    { id: 'real-estate', name: 'Bienes Raíces' },
-    { id: 'automotive', name: 'Automotriz & Transporte' },
-    { id: 'creative', name: 'Creativo & Experimental' }
-];
+    const palettes = [
+        { name: "Monocromático Profundo", theory: "Variaciones de un solo tono para elegancia extrema" },
+        { name: "Complementario Directo", theory: "Colores opuestos para máximo contraste y energía" },
+        { name: "Análogo Armónico", theory: "Colores vecinos para fluidez visual y calma" },
+        { name: "Triádico Vibrante", theory: "Tres colores equidistantes para dinamismo equilibrado" },
+        { name: "Split-Complementario", theory: "Contraste alto pero menos tensión que el directo" },
+        { name: "Cuadrado (Tetrádico)", theory: "Cuatro colores para riqueza visual compleja" },
+        { name: "Neon Cyberpunk", theory: "Fondos oscuros con acentos neón saturados" },
+        { name: "Pastel Soft", theory: "Baja saturación para delicadeza y modernidad" },
+        { name: "Earth Tones", theory: "Orgánicos, naturales y confiables" },
+        { name: "High Contrast B&W", theory: "Blanco y negro puro con un solo acento" },
+        { name: "Royal & Gold", theory: "Azules profundos y dorados para lujo" },
+        { name: "Sunset Gradient", theory: "Cálidos intensos (naranjas, rosas, púrpuras)" },
+        { name: "Oceanic Depths", theory: "Azules y verdes marinos profundos" },
+        { name: "Forest & Moss", theory: "Verdes variados con toques tierra" },
+        { name: "Desert Warmth", theory: "Terracotas, arenas y ocres" },
+        { name: "Industrial Concrete", theory: "Grises fríos con seguridad naranja o amarillo" },
+        { name: "Retro 80s", theory: "Violetas, magentas y cianes sintéticos" },
+        { name: "Minimalist Nordic", theory: "Blancos rotos, grises claros y madera" },
+        { name: "Pop Art Bold", theory: "Primarios saturados y contornos fuertes" },
+        { name: "Dark Mode UI", theory: "Grises muy oscuros con acentos luminosos" }
+    ];
 
-const colorPalettes = [
-    {
-        id: 'monochromatic-blue',
-        name: 'Océano Profundo',
-        type: 'Monocromática',
-        colors: ['#0a1628', '#1e3a5f', '#3d5a80', '#98c1d9', '#e0fbfc'],
-        theory: 'Monocromática - Variaciones de un solo tono para coherencia visual'
-    },
-    {
-        id: 'complementary-orange-blue',
-        name: 'Atardecer Urbano',
-        type: 'Complementaria',
-        colors: ['#1a1a2e', '#16213e', '#e94560', '#ff6b6b', '#feca57'],
-        theory: 'Complementaria - Contraste máximo entre azul y naranja/rojo'
-    },
-    {
-        id: 'analogous-green',
-        name: 'Bosque Esmeralda',
-        type: 'Análoga',
-        colors: ['#0d1b1e', '#1a3c34', '#2d6a4f', '#52b788', '#d8f3dc'],
-        theory: 'Análoga - Colores adyacentes en el círculo cromático'
-    },
-    {
-        id: 'triadic-vibrant',
-        name: 'Festival Vibrante',
-        type: 'Triádica',
-        colors: ['#2d132c', '#801060', '#dd2476', '#ff6b6b', '#ffa502'],
-        theory: 'Triádica - Tres colores equidistantes para máxima vibrancia'
-    },
-    {
-        id: 'split-complementary',
-        name: 'Desierto Místico',
-        type: 'Complementaria Dividida',
-        colors: ['#1a1a2e', '#4a1942', '#c73e1d', '#e5989b', '#ffb4a2'],
-        theory: 'Complementaria dividida - Contraste con menor tensión visual'
-    },
-    {
-        id: 'tetradic-square',
-        name: 'Neon Cyberpunk',
-        type: 'Tetrádica Cuadrada',
-        colors: ['#0d0d0d', '#ff006e', '#8338ec', '#3a86ff', '#06ffa5'],
-        theory: 'Tetrádica cuadrada - Cuatro colores equidistantes para energía dinámica'
-    },
-    {
-        id: 'warm-monochromatic',
-        name: 'Arena Dorada',
-        type: 'Monocromática Cálida',
-        colors: ['#3d2314', '#6b4423', '#a67c52', '#d4a574', '#f5deb3'],
-        theory: 'Monocromática cálida - Tonos tierra para calidez y elegancia'
-    },
-    {
-        id: 'cool-analogous',
-        name: 'Aurora Boreal',
-        type: 'Análoga Fría',
-        colors: ['#0f0f23', '#1a237e', '#3949ab', '#7986cb', '#c5cae9'],
-        theory: 'Análoga fría - Serenidad y profesionalismo con azules y violetas'
-    },
-    {
-        id: 'double-split',
-        name: 'Jardín Zen Moderno',
-        type: 'Doble Complementaria',
-        colors: ['#1b262c', '#3d5a5e', '#ad8b6f', '#e8dcc5', '#ffffff'],
-        theory: 'Doble complementaria - Equilibrio sofisticado entre cuatro tonos'
-    },
-    {
-        id: 'accented-neutral',
-        name: 'Minimalismo Bold',
-        type: 'Neutro con Acento',
-        colors: ['#0a0a0a', '#2a2a2a', '#666666', '#e0e0e0', '#ff3d00'],
-        theory: 'Neutro con acento - Base monocromática con pop de color estratégico'
-    },
-    {
-        id: 'pastel-harmony',
-        name: 'Sueño Pastel',
-        type: 'Armónica Pastel',
-        colors: ['#2d3436', '#a29bfe', '#fd79a8', '#ffeaa7', '#81ecec'],
-        theory: 'Armónica pastel - Suavidad y modernidad para diseños amigables'
-    },
-    {
-        id: 'earth-tones',
-        name: 'Tierra Auténtica',
-        type: 'Terrosa Natural',
-        colors: ['#2c1810', '#5d4037', '#8d6e63', '#bcaaa4', '#efebe9'],
-        theory: 'Terrosa - Conexión orgánica y autenticidad natural'
-    },
-    {
-        id: 'jewel-tones',
-        name: 'Tesoro Real',
-        type: 'Tonos Joya',
-        colors: ['#1a0524', '#4a0e4e', '#9b2c8c', '#d35400', '#f39c12'],
-        theory: 'Tonos joya - Lujo, profundidad y sofisticación premium'
-    },
-    {
-        id: 'high-contrast-bw',
-        name: 'Blanco & Negro Dramático',
-        type: 'Alto Contraste',
-        colors: ['#000000', '#1a1a1a', '#808080', '#e6e6e6', '#ffffff'],
-        theory: 'Alto contraste - Elegancia atemporal con impacto visual máximo'
-    },
-    {
-        id: 'sunset-gradient',
-        name: 'Puesta de Sol',
-        type: 'Degradado Natural',
-        colors: ['#2c003e', '#51006b', '#77006d', '#a61c00', '#ff5e00'],
-        theory: 'Degradado natural - Transición suave que evoca emociones cálidas'
-    },
-    {
-        id: 'ocean-depths',
-        name: 'Profundidades Marinas',
-        type: 'Azul Profundo',
-        colors: ['#001d3d', '#003566', '#005b96', '#6497b1', '#b3cde0'],
-        theory: 'Azul profundo - Confianza, estabilidad y profesionalismo'
-    },
-    {
-        id: 'forest-mist',
-        name: 'Niebla del Bosque',
-        type: 'Verde Desaturado',
-        colors: ['#1a2f23', '#2d4a3e', '#4a6741', '#87a878', '#c9d8b5'],
-        theory: 'Verde desaturado - Calma natural con sofisticación contemporánea'
-    },
-    {
-        id: 'retro-wave',
-        name: 'Retro Wave 80s',
-        type: 'Nostálgica Vibrante',
-        colors: ['#2b0f54', '#ff00ff', '#00ffff', '#ff6b6b', '#feca57'],
-        theory: 'Nostálgica - Energía retro con neones característicos de los 80s'
-    },
-    {
-        id: 'muted-modern',
-        name: 'Moderno Silenciado',
-        type: 'Desaturado Contemporáneo',
-        colors: ['#2c3e50', '#5d6d7e', '#85929e', '#aab7b8', '#d5dbdb'],
-        theory: 'Desaturado contemporáneo - Sofisticación moderna sin estridencias'
-    },
-    {
-        id: 'bold-primary',
-        name: 'Primarios Audaces',
-        type: 'Colores Primarios',
-        colors: ['#0a0a0a', '#e63946', '#1d3557', '#ffd60a', '#ffffff'],
-        theory: 'Primarios - Impacto visual directo con colores fundamentales'
+    // --- INIT ---
+    document.addEventListener('DOMContentLoaded', () => {
+        populateSelect('category', categories);
+        populateSelect('palette', palettes.map(p => p.name));
+        loadHistory();
+        
+        // Listener para actualizar colores cuando cambia la paleta (simulado)
+        document.getElementById('palette').addEventListener('change', updateColorPreview);
+    });
+
+    function populateSelect(id, items) {
+        const select = document.getElementById(id);
+        items.forEach(item => {
+            const option = document.createElement('option');
+            option.value = typeof item === 'string' ? item : item.name;
+            option.textContent = typeof item === 'string' ? item : `${item.name} (${item.theory})`;
+            select.appendChild(option);
+        });
     }
-];
 
-// ============================================
-// SYSTEM PROMPT TEMPLATE
-// ============================================
+    function toggleAdvanced() {
+        const el = document.getElementById('advanced-options');
+        el.classList.toggle('active');
+    }
 
-const systemPrompt = `Eres un director creativo de nivel mundial con 20 años de experiencia en diseño de identidad visual, presentaciones de alto impacto, infografías editoriales y comunicación visual estratégica para marcas Fortune 500, agencias de diseño premiadas y proyectos culturales internacionales. Has ganado reconocimientos en diseño tipográfico, dirección de arte editorial y experiencia visual inmersiva.
+    function updateColorPreview() {
+        // En una app real, esto cargaría hex específicos. 
+        // Aquí randomizamos ligeramente para dar feedback visual de cambio.
+        const paletteName = document.getElementById('palette').value;
+        if(!paletteName) return;
+        
+        // Simulación de asignación de colores basada en la selección
+        // Esto es solo para demo, el usuario puede editar manualmente después
+        const colors = generatePaletteFromName(paletteName);
+        document.getElementById('color-base').value = colors[0];
+        document.getElementById('color-structure').value = colors[1];
+        document.getElementById('color-accent1').value = colors[2];
+        document.getElementById('color-accent2').value = colors[3];
+        document.getElementById('color-neutral').value = colors[4];
+    }
 
-Tu única obsesión es crear prompts de diseño que sean extraordinarios: no funcionales, no correctos, sino MEMORABLES e INESPERADOS.
+    function generatePaletteFromName(name) {
+        // Lógica simple para asignar colores iniciales según el nombre de la paleta
+        // En producción esto sería un objeto de mapeo completo
+        if(name.includes("Neon")) return ["#0f0f0f", "#1a1a1a", "#00ff99", "#ff00ff", "#333333"];
+        if(name.includes("Earth")) return ["#f5f5dc", "#8b4513", "#556b2f", "#d2691e", "#a0826d"];
+        if(name.includes("Ocean")) return ["#f0f8ff", "#4682b4", "#00ced1", "#191970", "#778899"];
+        if(name.includes("Royal")) return ["#002366", "#1a1a1a", "#ffd700", "#c0c0c0", "#4a4a4a"];
+        // Default genérico agradable
+        return ["#ffffff", "#2d3748", "#38bdf8", "#f56565", "#a0aec0"];
+    }
 
-FORMATO DE SALIDA REQUERIDO: {outputFormat}
+    // --- CORE LOGIC ---
+    function generatePrompt() {
+        const topic = document.getElementById('topic').value.trim();
+        const format = document.getElementById('format').value;
+        const category = document.getElementById('category').value;
+        const paletteName = document.getElementById('palette').value;
 
-Cuando el usuario te proporcione una idea inicial (aunque sea vaga, incompleta o básica), tu trabajo es transformarla en un PROMPT MAESTRO DE DISEÑO con la siguiente arquitectura obligatoria:
+        if (!topic || !category || !paletteName) {
+            alert("Por favor completa la temática, categoría y estilo de paleta.");
+            return;
+        }
+
+        // Obtener colores personalizados
+        const colors = {
+            base: document.getElementById('color-base').value,
+            structure: document.getElementById('color-structure').value,
+            accent1: document.getElementById('color-accent1').value,
+            accent2: document.getElementById('color-accent2').value,
+            neutral: document.getElementById('color-neutral').value
+        };
+
+        const systemPrompt = buildMasterPrompt(topic, format, category, paletteName, colors);
+        
+        // Mostrar resultado
+        const outputDiv = document.getElementById('prompt-result');
+        outputDiv.textContent = systemPrompt;
+        
+        // Guardar en historial
+        saveToHistory({ topic, category, palette: paletteName, date: new Date().toLocaleTimeString() });
+    }
+
+    function buildMasterPrompt(topic, format, category, paletteName, colors) {
+        return `Eres un director creativo de nivel mundial con 20 años de experiencia en diseño de identidad visual, presentaciones de alto impacto, infografías editoriales y comunicación visual estratégica para marcas Fortune 500.
+
+TU OBJETIVO: Transformar la idea del usuario en un PROMPT MAESTRO DE DISEÑO para ${format.toUpperCase()} sobre "${topic}".
+CATEGORÍA SELECCIONADA: ${category}
+ESTILO CROMÁTICO: ${paletteName}
+
+--- ARQUITECTURA DEL PROMPT GENERADO ---
 
 BLOQUE 1 — CONCEPTO CENTRAL Y METÁFORA VISUAL DOMINANTE
+No describas el tema superficialmente. REIMAGÍNALO bajo la lente de "${category}".
+- Define la metáfora visual central única.
+- Establece la tensión visual (ej. clásico vs moderno).
+- Describe la emoción inmediata.
 
-No describas el tema. REIMAGÍNALO. Define:
-- La metáfora visual central (una sola, poderosa, coherente)
-- Lo que hace este diseño RADICALMENTE diferente a cualquier otro
-- La tensión visual elegida (lo clásico vs lo moderno, lo visible vs lo oculto, el orden vs la ruptura, lo mínimo vs lo expresivo)
-- La emoción que debe despertar al primer vistazo
-- El elemento que nadie olvidará
+BLOQUE 2 — SISTEMA CROMÁTICO PERSONALIZADO
+Usa EXACTAMENTE esta configuración de colores con roles narrativos:
+1. BASE (${colors.base}): Usado para fondos dominantes o espacios de respiro.
+2. ESTRUCTURA (${colors.structure}): Para líneas guía, bordes y jerarquía secundaria.
+3. ACENTO PRIMARIO (${colors.accent1}): El color protagonista para CTAs y datos clave.
+4. ACENTO DE CONTRASTE (${colors.accent2}): Uso esporádico (máx 5%) para shock visual.
+5. NEUTRO FUNCIONAL (${colors.neutral}): Para textos secundarios y elementos de soporte.
+Instrucción: Aplica teoría del color ${paletteName} para armonizar estos valores hexadecimales específicos.
 
-BLOQUE 2 — SISTEMA CROMÁTICO CON ROLES Y JERARQUÍA
+BLOQUE 3 — SISTEMA TIPOGRÁFICO CON CARÁCTER
+- Pareja principal: Display (impacto) + Cuerpo (legibilidad). Evita fuentes genéricas.
+- Define pesos, tracking y el "momento estelar" tipográfico donde la letra es imagen.
 
-Entrega una paleta de 5 colores armónica o complementaria con roles diferenciados que NO sea genérica ni predecible. Incluye:
-- Rol: base, estructura, acento primario, acento de contraste, neutro funcional
-- Número Hexadecimal del color
-- Nombre descriptivo
-- Uso específico en {outputFormat}
-- Instrucción explícita de escasez: cuándo aparece el acento y por qué
-- Secciones de alto impacto: combinación cromática invertida o disruptiva con frecuencia recomendada
-- Relación psicológica entre la paleta y el tema del diseño
+BLOQUE 4 — ELEMENTOS GRÁFICOS ÚNICOS (NO STOCK)
+Define 5 elementos visuales propios de este proyecto conceptual.
+- Describe su forma, función narrativa y evolución visual.
 
-PALETA SELECCIONADA POR EL USUARIO:
-{paletteInfo}
+BLOQUE 5 — COMPOSICIÓN Y ESPACIO
+- Regla de distribución (ej. asimétrica, diagonal).
+- Tratamiento del espacio negativo.
+- El "elemento roto": qué regla se romperá intencionalmente.
 
-BLOQUE 3 — SISTEMA TIPOGRÁFICO CON TENSIÓN Y CARÁCTER
-
-Rechaza fuentes genéricas (Inter, Roboto, Lato, Montserrat, Arial). Proporciona:
-- Pareja tipográfica principal: Display + Cuerpo (con nombres exactos disponibles en Google Fonts o Adobe Fonts)
-- Tipografía de contraste funcional (datos, etiquetas, números)
-- Para cada fuente: peso(s) recomendados, tamaño en contexto, tracking sugerido, uso narrativo
-- El "momento estelar" tipográfico: una sección donde la tipografía SE CONVIERTE en el diseño
-- La tensión tipográfica elegida: ¿dónde chocan intencionalmente dos fuentes para crear drama visual?
-
-BLOQUE 4 — SISTEMA DE ELEMENTOS GRÁFICOS ÚNICOS
-
-Define al menos 5 elementos visuales propios de ESTE diseño (no stock, no genéricos, no iconos convencionales). Para cada uno:
-- Nombre del elemento y descripción visual precisa
-- Función narrativa (qué comunica, no solo cómo se ve)
-- Cómo se construye o de dónde proviene conceptualmente
-- Cómo evoluciona o se repite a lo largo de la pieza
-
-BLOQUE 5 — PRINCIPIOS DE COMPOSICIÓN Y ESPACIO
-
-Rechaza el diseño centrado y simétrico por defecto. Define:
-- Regla de distribución espacial (ej. 70/30, diagonal dominante, columnas asimétricas)
-- Tratamiento del silencio/espacio negativo: ¿es decorativo o portador de significado?
-- El "elemento roto": qué regla compositiva se romperá intencionalmente y por qué
-- Ritmo visual: alternancia de densidad/ligereza, oscuridad/claridad, texto/imagen
-
-BLOQUE 6 — ESTRUCTURA NARRATIVA {structureTitle}
-
-Construye un storyboard visual detallado. Para cada elemento:
+BLOQUE 6 — ESTRUCTURA NARRATIVA (STORYBOARD)
+Genera una tabla detallada para ${format === 'presentacion' ? '10 slides' : format === 'infografia' ? 'secciones verticales' : 'escenas de video'}:
 | # | Título | Concepto Visual | Elemento Dominante | Tono Emocional |
-
-Requisitos del arco narrativo:
-- Apertura de máximo impacto (no introducción tímida)
-- Al menos 2 secciones de "alto contraste" (disruptivas, oscuras, tipográficamente radicales)
-- Al menos 1 sección donde un solo dato o cita llene el 80% del espacio
-- Cierre con imagen/concepto que resuene con la apertura (arco cerrado)
-- Variación intencional de densidad: ningún elemento debe verse igual al anterior
+(Incluye apertura de impacto, slides de alto contraste y cierre resonante).
 
 BLOQUE 7 — DIFERENCIADORES ABSOLUTOS
+- Lo que este diseño NUNCA hará.
+- Las 3 decisiones arriesgadas que lo hacen memorable.
 
-Lista explícita de:
-- Lo que este diseño NUNCA hará (rechazos estéticos conscientes)
-- Lo que ningún otro diseñador haría pero TÚ sí (las 3 decisiones más arriesgadas y por qué funcionan)
-- El elemento que hará que el auditorio/usuario pregunte "¿cómo lo hicieron?"
+BLOQUE 8 — TAGS CONCEPTUALES
+Lista de tags de estilo y concepto para refinamiento final.
 
-BLOQUE 8 — TAGS CONCEPTUALES Y DE ESTILO
-
-Finaliza con tags en dos categorías:
-- Estilo visual: términos de diseño precisos que capturen la estética
-- Concepto/tema: términos que conecten el diseño con su significado
-
-REGLAS ABSOLUTAS PARA GENERAR EL PROMPT:
-
-1. NUNCA repitas el estilo de un prompt anterior. Cada prompt es una dirección estética completamente diferente.
-2. NUNCA uses como referencia los jardines zen, los degradados púrpura, el minimalismo blanco genérico ni ningún cliché visual.
-3. SIEMPRE parte de una metáfora conceptual antes de pensar en colores.
-4. Los colores TIENEN ROLES NARRATIVOS, no son solo estética.
-5. La tipografía debe SORPRENDER: si la primera fuente que piensas es obvia, descártala.
-6. Cada elemento gráfico debe JUSTIFICAR SU EXISTENCIA conceptualmente, no solo visualmente.
-7. La sección más poderosa debe hacer que el diseñador promedio sienta incomodidad al verla (demasiado atrevida).
-8. Si el usuario da una idea tímida, AMPLÍALA radicalmente. Tu trabajo es elevar, no confirmar.
-9. Entrega SIEMPRE una paleta de colores con teoría del color, nombres tipográficos exactos y el storyboard completo.
-10. El prompt final debe poder ser ejecutado por otro diseñador sin necesidad de interpretación adicional.
-
-TEMÁTICA DEL USUARIO: {userTopic}
-CATEGORÍA SELECCIONADA: {category}
-FORMATO: {outputFormat}`;
-
-// ============================================
-// APP STATE
-// ============================================
-
-let appState = {
-    topic: '',
-    format: 'presentation',
-    category: '',
-    palette: '',
-    customColors: ['', '', '', '', ''],
-    showAdvanced: false,
-    history: []
-};
-
-// ============================================
-// INITIALIZATION
-// ============================================
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Inicializando aplicación...');
-    initApp();
-});
-
-function initApp() {
-    loadHistory();
-    populateCategories();
-    populatePalettes();
-    setupEventListeners();
-    renderHistory();
-    console.log('Aplicación inicializada correctamente');
-}
-
-// ============================================
-// POPULATE DROPDOWNS
-// ============================================
-
-function populateCategories() {
-    const select = document.getElementById('categorySelect');
-    if (!select) {
-        console.error('No se encontró el selector de categorías');
-        return;
+REGLAS DE EJECUCIÓN:
+1. Sé radical, no seguro.
+2. Usa los códigos HEX proporcionados estrictamente.
+3. El tono debe ser de autoridad creativa.
+4. Formato de salida: Markdown estructurado y listo para copiar.`;
     }
-    
-    // Clear existing options except the first one
-    select.innerHTML = '<option value="">Selecciona una categoría...</option>';
-    
-    categories.forEach(cat => {
-        const option = document.createElement('option');
-        option.value = cat.id;
-        option.textContent = cat.name;
-        select.appendChild(option);
-    });
-    
-    console.log(`Categorías pobladas: ${categories.length}`);
-}
 
-function populatePalettes() {
-    const select = document.getElementById('paletteSelect');
-    if (!select) {
-        console.error('No se encontró el selector de paletas');
-        return;
+    // --- HISTORY & UTILS ---
+    function saveToHistory(item) {
+        let history = JSON.parse(localStorage.getItem('promptHistory') || '[]');
+        history.unshift(item);
+        if (history.length > 20) history.pop();
+        localStorage.setItem('promptHistory', JSON.stringify(history));
+        loadHistory();
     }
-    
-    // Clear existing options
-    select.innerHTML = '<option value="">Selecciona un estilo de paleta...</option>';
-    
-    colorPalettes.forEach(palette => {
-        const option = document.createElement('option');
-        option.value = palette.id;
-        option.textContent = `${palette.name} (${palette.type})`;
-        select.appendChild(option);
-    });
-    
-    console.log(`Paletas pobladas: ${colorPalettes.length}`);
-}
 
-// ============================================
-// EVENT LISTENERS
-// ============================================
-
-function setupEventListeners() {
-    // Generate button
-    const generateBtn = document.getElementById('generateBtn');
-    if (generateBtn) {
-        generateBtn.addEventListener('click', generatePrompt);
-    }
-    
-    // Topic input
-    const topicInput = document.getElementById('topicInput');
-    if (topicInput) {
-        topicInput.addEventListener('input', (e) => {
-            appState.topic = e.target.value;
-        });
-    }
-    
-    // Format selection
-    const formatButtons = document.querySelectorAll('.format-btn');
-    formatButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            formatButtons.forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-            appState.format = e.target.dataset.format;
-        });
-    });
-    
-    // Category selection
-    const categorySelect = document.getElementById('categorySelect');
-    if (categorySelect) {
-        categorySelect.addEventListener('change', (e) => {
-            appState.category = e.target.value;
-        });
-    }
-    
-    // Palette selection
-    const paletteSelect = document.getElementById('paletteSelect');
-    if (paletteSelect) {
-        paletteSelect.addEventListener('change', (e) => {
-            appState.palette = e.target.value;
-            updatePalettePreview(e.target.value);
-        });
-    }
-    
-    // Advanced options toggle
-    const advancedToggle = document.getElementById('advancedToggle');
-    if (advancedToggle) {
-        advancedToggle.addEventListener('click', () => {
-            appState.showAdvanced = !appState.showAdvanced;
-            const advancedPanel = document.getElementById('advancedPanel');
-            if (advancedPanel) {
-                advancedPanel.style.display = appState.showAdvanced ? 'block' : 'none';
-            }
-            const toggleText = document.getElementById('toggleText');
-            if (toggleText) {
-                toggleText.textContent = appState.showAdvanced ? 'Ocultar Opciones Avanzadas' : 'Mostrar Opciones Avanzadas';
-            }
-        });
-    }
-    
-    // Custom color inputs
-    for (let i = 0; i < 5; i++) {
-        const colorInput = document.getElementById(`customColor${i}`);
-        if (colorInput) {
-            colorInput.addEventListener('input', (e) => {
-                appState.customColors[i] = e.target.value;
-                updateCustomColorPreview(i, e.target.value);
-            });
+    function loadHistory() {
+        const list = document.getElementById('history-list');
+        const history = JSON.parse(localStorage.getItem('promptHistory') || '[]');
+        
+        if (history.length === 0) {
+            list.innerHTML = '<div style="padding: 1rem; color: var(--text-secondary); font-size: 0.8rem; text-align: center;">No hay historial reciente</div>';
+            return;
         }
-    }
-    
-    // Copy button
-    const copyBtn = document.getElementById('copyBtn');
-    if (copyBtn) {
-        copyBtn.addEventListener('click', copyPrompt);
-    }
-    
-    // Download button
-    const downloadBtn = document.getElementById('downloadBtn');
-    if (downloadBtn) {
-        downloadBtn.addEventListener('click', downloadPrompt);
-    }
-    
-    // Clear history button
-    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-    if (clearHistoryBtn) {
-        clearHistoryBtn.addEventListener('click', clearHistory);
-    }
-    
-    console.log('Event listeners configurados');
-}
 
-// ============================================
-// PALETTE PREVIEW
-// ============================================
-
-function updatePalettePreview(paletteId) {
-    const preview = document.getElementById('palettePreview');
-    if (!preview) return;
-    
-    const palette = colorPalettes.find(p => p.id === paletteId);
-    if (!palette) return;
-    
-    preview.innerHTML = '';
-    
-    const theoryText = document.createElement('p');
-    theoryText.className = 'palette-theory';
-    theoryText.textContent = palette.theory;
-    preview.appendChild(theoryText);
-    
-    const colorsContainer = document.createElement('div');
-    colorsContainer.className = 'palette-colors';
-    
-    palette.colors.forEach(color => {
-        const colorSwatch = document.createElement('div');
-        colorSwatch.className = 'color-swatch';
-        colorSwatch.style.backgroundColor = color;
-        colorSwatch.title = color;
-        colorsContainer.appendChild(colorSwatch);
-    });
-    
-    preview.appendChild(colorsContainer);
-}
-
-function updateCustomColorPreview(index, color) {
-    const swatch = document.getElementById(`customSwatch${index}`);
-    if (swatch && color) {
-        swatch.style.backgroundColor = color;
-        swatch.title = color;
-    }
-}
-
-// ============================================
-// GENERATE PROMPT
-// ============================================
-
-function generatePrompt() {
-    // Validate inputs
-    if (!appState.topic.trim()) {
-        alert('Por favor ingresa una temática para desarrollar.');
-        return;
-    }
-    
-    if (!appState.category) {
-        alert('Por favor selecciona una categoría.');
-        return;
-    }
-    
-    if (!appState.palette) {
-        alert('Por favor selecciona un estilo de paleta.');
-        return;
-    }
-    
-    const selectedPalette = colorPalettes.find(p => p.id === appState.palette);
-    const selectedCategory = categories.find(c => c.id === appState.category);
-    
-    if (!selectedPalette || !selectedCategory) {
-        alert('Error: Categoría o paleta no válida.');
-        return;
-    }
-    
-    // Check if using custom colors
-    const hasCustomColors = appState.customColors.some(c => c.trim() !== '');
-    let paletteInfo = `Nombre: ${selectedPalette.name}\\nTipo: ${selectedPalette.type}\\nTeoría: ${selectedPalette.theory}\\nColores:\\n`;
-    
-    if (hasCustomColors) {
-        appState.customColors.forEach((color, index) => {
-            if (color.trim() !== '') {
-                paletteInfo += `- Color ${index + 1}: ${color} (Personalizado)\\n`;
-            } else {
-                paletteInfo += `- Color ${index + 1}: ${selectedPalette.colors[index]}\\n`;
-            }
-        });
-    } else {
-        selectedPalette.colors.forEach((color, index) => {
-            paletteInfo += `- Color ${index + 1}: ${color}\\n`;
+        list.innerHTML = '';
+        history.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `
+                <h4>${item.topic}</h4>
+                <span>${item.category} • ${item.date}</span>
+            `;
+            div.onclick = () => {
+                document.getElementById('topic').value = item.topic;
+                // Intentar seleccionar categoría si existe
+                const catSelect = document.getElementById('category');
+                for(let i=0; i<catSelect.options.length; i++) {
+                    if(catSelect.options[i].value === item.category) {
+                        catSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            };
+            list.appendChild(div);
         });
     }
-    
-    // Determine structure title based on format
-    let structureTitle = 'SLIDE A SLIDE';
-    let outputFormat = 'Presentación';
-    
-    if (appState.format === 'infographic') {
-        structureTitle = 'SECCIÓN POR SECCIÓN';
-        outputFormat = 'Infografía';
-    } else if (appState.format === 'video') {
-        structureTitle = 'ESCENA POR ESCENA';
-        outputFormat = 'Video';
-    }
-    
-    // Generate the prompt
-    const prompt = systemPrompt
-        .replace('{userTopic}', appState.topic)
-        .replace('{category}', selectedCategory.name)
-        .replace('{outputFormat}', outputFormat)
-        .replace('{paletteInfo}', paletteInfo)
-        .replace('{structureTitle}', structureTitle);
-    
-    // Display the prompt
-    const outputArea = document.getElementById('outputArea');
-    if (outputArea) {
-        outputArea.value = prompt;
-        outputArea.scrollTop = 0;
-    }
-    
-    // Add to history
-    addToHistory({
-        topic: appState.topic,
-        format: outputFormat,
-        category: selectedCategory.name,
-        palette: selectedPalette.name,
-        timestamp: new Date().toISOString(),
-        prompt: prompt
-    });
-    
-    // Show success message
-    const statusMsg = document.getElementById('statusMsg');
-    if (statusMsg) {
-        statusMsg.textContent = '¡Prompt generado exitosamente!';
-        statusMsg.style.opacity = '1';
-        setTimeout(() => {
-            statusMsg.style.opacity = '0';
-        }, 3000);
-    }
-    
-    console.log('Prompt generado');
-}
 
-// ============================================
-// HISTORY MANAGEMENT
-// ============================================
-
-function loadHistory() {
-    const saved = localStorage.getItem('notebooklm_history');
-    if (saved) {
-        try {
-            appState.history = JSON.parse(saved);
-        } catch (e) {
-            appState.history = [];
-        }
+    function copyToClipboard() {
+        const text = document.getElementById('prompt-result').textContent;
+        if (text.includes("El prompt generado aparecerá aquí")) return;
+        
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.querySelector('.btn-copy');
+            const originalText = btn.textContent;
+            btn.textContent = "¡Copiado!";
+            setTimeout(() => btn.textContent = originalText, 2000);
+        });
     }
-}
 
-function saveHistory() {
-    localStorage.setItem('notebooklm_history', JSON.stringify(appState.history));
-}
+    function downloadPrompt() {
+        const text = document.getElementById('prompt-result').textContent;
+        if (text.includes("El prompt generado aparecerá aquí")) return;
 
-function addToHistory(item) {
-    appState.history.unshift(item);
-    if (appState.history.length > 20) {
-        appState.history = appState.history.slice(0, 20);
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `notebooklm-prompt-${Date.now()}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
-    saveHistory();
-    renderHistory();
-}
-
-function renderHistory() {
-    const historyContainer = document.getElementById('historyContainer');
-    if (!historyContainer) return;
-    
-    historyContainer.innerHTML = '';
-    
-    if (appState.history.length === 0) {
-        historyContainer.innerHTML = '<p class="empty-history">No hay prompts en el historial aún.</p>';
-        return;
-    }
-    
-    appState.history.forEach((item, index) => {
-        const historyItem = document.createElement('div');
-        historyItem.className = 'history-item';
-        historyItem.innerHTML = `
-            <h4>${item.topic.substring(0, 40)}${item.topic.length > 40 ? '...' : ''}</h4>
-            <p class="history-meta">${item.format} • ${item.category}</p>
-            <p class="history-date">${new Date(item.timestamp).toLocaleDateString('es-ES')}</p>
-        `;
-        historyItem.addEventListener('click', () => loadFromHistory(index));
-        historyContainer.appendChild(historyItem);
-    });
-}
-
-function loadFromHistory(index) {
-    const item = appState.history[index];
-    if (!item) return;
-    
-    const topicInput = document.getElementById('topicInput');
-    if (topicInput) {
-        topicInput.value = item.topic;
-        appState.topic = item.topic;
-    }
-    
-    // Set format
-    const formatButtons = document.querySelectorAll('.format-btn');
-    formatButtons.forEach(btn => {
-        btn.classList.remove('active');
-        if ((item.format === 'Presentación' && btn.dataset.format === 'presentation') ||
-            (item.format === 'Infografía' && btn.dataset.format === 'infographic') ||
-            (item.format === 'Video' && btn.dataset.format === 'video')) {
-            btn.classList.add('active');
-            appState.format = btn.dataset.format;
-        }
-    });
-    
-    // Set category
-    const categorySelect = document.getElementById('categorySelect');
-    if (categorySelect) {
-        const catIndex = categories.findIndex(c => c.name === item.category);
-        if (catIndex !== -1) {
-            categorySelect.value = categories[catIndex].id;
-            appState.category = categories[catIndex].id;
-        }
-    }
-    
-    // Set palette
-    const paletteSelect = document.getElementById('paletteSelect');
-    if (paletteSelect) {
-        const palIndex = colorPalettes.findIndex(p => p.name === item.palette);
-        if (palIndex !== -1) {
-            paletteSelect.value = colorPalettes[palIndex].id;
-            appState.palette = colorPalettes[palIndex].id;
-            updatePalettePreview(colorPalettes[palIndex].id);
-        }
-    }
-    
-    // Load prompt in output
-    const outputArea = document.getElementById('outputArea');
-    if (outputArea) {
-        outputArea.value = item.prompt;
-    }
-}
-
-function clearHistory() {
-    if (confirm('¿Estás seguro de que deseas borrar todo el historial?')) {
-        appState.history = [];
-        saveHistory();
-        renderHistory();
-    }
-}
-
-// ============================================
-// COPY AND DOWNLOAD
-// ============================================
-
-function copyPrompt() {
-    const outputArea = document.getElementById('outputArea');
-    if (!outputArea || !outputArea.value) {
-        alert('No hay ningún prompt para copiar.');
-        return;
-    }
-    
-    navigator.clipboard.writeText(outputArea.value).then(() => {
-        const copyBtn = document.getElementById('copyBtn');
-        if (copyBtn) {
-            const originalText = copyBtn.textContent;
-            copyBtn.textContent = '¡Copiado!';
-            copyBtn.style.background = 'var(--success)';
-            setTimeout(() => {
-                copyBtn.textContent = originalText;
-                copyBtn.style.background = '';
-            }, 2000);
-        }
-    }).catch(err => {
-        alert('Error al copiar: ' + err);
-    });
-}
-
-function downloadPrompt() {
-    const outputArea = document.getElementById('outputArea');
-    if (!outputArea || !outputArea.value) {
-        alert('No hay ningún prompt para descargar.');
-        return;
-    }
-    
-    const blob = new Blob([outputArea.value], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `prompt-notebooklm-${Date.now()}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-// ============================================
-// UTILITY FUNCTIONS
-// ============================================
-
-function hexToRgb(hex) {
-    const result = /^#?([a-f\\d]{2})([a-f\\d]{2})([a-f\\d]{2})$/i.exec(hex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-    } : null;
-}
-
-function getContrastColor(hex) {
-    const rgb = hexToRgb(hex);
-    if (!rgb) return '#000000';
-    
-    const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
-    return luminance > 0.5 ? '#000000' : '#ffffff';
-}
 </script>
+
 </body>
 </html>
