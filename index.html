@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NotebookLM Prompt Generator Pro</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-panel: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --border: #334155;
+            --success: #22c55e;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            background: var(--bg-panel);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 { font-size: 1.2rem; font-weight: 600; color: var(--accent); }
+        .badge { background: var(--border); padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem; }
+
+        /* Layout de 3 Paneles */
+        .main-container {
+            display: grid;
+            grid-template-columns: 250px 1fr 1fr;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .panel {
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 1rem;
+            background: rgba(30, 41, 59, 0.5);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Panel 1: Historial */
+        #history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .history-item {
+            background: var(--bg-panel);
+            padding: 0.8rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover { border-color: var(--accent); }
+        .history-item h4 { font-size: 0.85rem; margin-bottom: 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-item span { font-size: 0.75rem; color: var(--text-secondary); }
+
+        /* Panel 2: Board Studio */
+        #studio-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .form-group { margin-bottom: 1.2rem; }
+        label { display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-secondary); }
+        
+        input[type="text"], select, textarea {
+            width: 100%;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.7rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .advanced-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .advanced-options {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .advanced-options.active { display: block; }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .color-picker-group { display: flex; flex-direction: column; gap: 0.3rem; }
+        .color-picker-group label { font-size: 0.7rem; }
+        input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: none;
+            cursor: pointer;
+            background: none;
+        }
+
+        .btn-generate {
+            width: 100%;
+            background: var(--accent);
+            color: var(--bg-dark);
+            border: none;
+            padding: 1rem;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: background 0.2s;
+        }
+
+        .btn-generate:hover { background: var(--accent-hover); }
+
+        /* Panel 3: Output */
+        #output-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            background: #0b1120;
+        }
+
+        .output-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            background: var(--bg-panel);
+            color: var(--text-primary);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .btn-action:hover { background: var(--border); }
+        .btn-copy { background: var(--success); color: white; border: none; }
+        .btn-copy:hover { opacity: 0.9; }
+
+        #prompt-result {
+            flex: 1;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #e2e8f0;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .placeholder-text {
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: 3rem;
+            font-style: italic;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+        @media (max-width: 900px) {
+            .main-container { grid-template-columns: 1fr; grid-template-rows: auto 1fr 1fr; overflow-y: auto; }
+            .panel { border-right: none; border-bottom: 1px solid var(--border); height: auto; min-height: 400px; }
+            body { overflow: auto; height: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🎨 NotebookLM Prompt Architect</h1>
+    <span class="badge">v2.0 Professional</span>
+</header>
+
+<div class="main-container">
+    <!-- Panel 1: Historial -->
+    <div class="panel">
+        <div class="panel-header">Historial de Prompts</div>
+        <div id="history-list">
+            <!-- Items inyectados por JS -->
+            <div style="padding: 1rem; color: var(--text-secondary); font-size: 0.8rem; text-align: center;">
+                No hay historial reciente
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 2: Board Studio -->
+    <div class="panel">
+        <div class="panel-header">Board Studio</div>
+        <div id="studio-content">
+            <div class="form-group">
+                <label>Temática a Desarrollar</label>
+                <textarea id="topic" rows="3" placeholder="Ej: La evolución de la inteligencia artificial en la medicina moderna..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Formato de Salida</label>
+                <select id="format">
+                    <option value="presentacion">Presentación (Slides)</option>
+                    <option value="infografia">Infografía Editorial</option>
+                    <option value="video">Guion Visual para Video</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Categoría de Diseño</label>
+                <select id="category">
+                    <option value="" disabled selected>Selecciona una categoría...</option>
+                    <!-- Inyectado por JS -->
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Estilo de Paleta (Teoría del Color)</label>
+                <select id="palette">
+                    <option value="" disabled selected>Selecciona un estilo...</option>
+                    <!-- Inyectado por JS -->
+                </select>
+            </div>
+
+            <button class="advanced-toggle" onclick="toggleAdvanced()">
+                <span>Opciones Avanzadas (Personalizar Colores)</span>
+                <span>▼</span>
+            </button>
+
+            <div class="advanced-options" id="advanced-options">
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                    Personaliza los roles de color de la paleta seleccionada:
+                </p>
+                <div class="color-grid">
+                    <div class="color-picker-group">
+                        <label>Base</label>
+                        <input type="color" id="color-base" value="#ffffff">
+                    </div>
+                    <div class="color-picker-group">
+                        <label>Estructura</label>
+                        <input type="color" id="color-structure" value="#333333">
+                    </div>
+                    <div class="color-picker-group">
+                        <label>Acento Primario</label>
+                        <input type="color" id="color-accent1" value="#38bdf8">
+                    </div>
+                    <div class="color-picker-group">
+                        <label>Acento Contraste</label>
+                        <input type="color" id="color-accent2" value="#f43f5e">
+                    </div>
+                    <div class="color-picker-group">
+                        <label>Neutro</label>
+                        <input type="color" id="color-neutral" value="#94a3b8">
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-generate" onclick="generatePrompt()">Generar Prompt Profesional</button>
+        </div>
+    </div>
+
+    <!-- Panel 3: Output -->
+    <div class="panel">
+        <div class="panel-header">Prompt Generado</div>
+        <div id="output-content">
+            <div class="output-actions">
+                <button class="btn-action btn-copy" onclick="copyToClipboard()">Copiar al Portapapeles</button>
+                <button class="btn-action" onclick="downloadPrompt()">Descargar .txt</button>
+            </div>
+            <div id="prompt-result">
+                <div class="placeholder-text">
+                    El prompt generado aparecerá aquí.<br>
+                    Configura las opciones en el Board Studio y presiona "Generar".
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- DATA ---
+    const categories = [
+        "Corporativo & Ejecutivo", "Tecnología & SaaS", "Finanzas & Cripto", 
+        "Salud & Bienestar", "Educación & E-Learning", "Moda & Lujo", 
+        "Gastronomía & Culinary", "Arquitectura & Interiorismo", "Arte & Cultura", 
+        "Medio Ambiente & Sostenibilidad", "Deportes & Fitness", "Viajes & Turismo", 
+        "Entretenimiento & Gaming", "Música & Festivales", "Política & Sociedad", 
+        "Ciencia & Investigación", "Startups & Innovación", "Real Estate", 
+        "Automotriz & Transporte", "Creativo & Experimental"
+    ];
+
+    const palettes = [
+        { name: "Monocromático Profundo", theory: "Variaciones de un solo tono para elegancia extrema" },
+        { name: "Complementario Directo", theory: "Colores opuestos para máximo contraste y energía" },
+        { name: "Análogo Armónico", theory: "Colores vecinos para fluidez visual y calma" },
+        { name: "Triádico Vibrante", theory: "Tres colores equidistantes para dinamismo equilibrado" },
+        { name: "Split-Complementario", theory: "Contraste alto pero menos tensión que el directo" },
+        { name: "Cuadrado (Tetrádico)", theory: "Cuatro colores para riqueza visual compleja" },
+        { name: "Neon Cyberpunk", theory: "Fondos oscuros con acentos neón saturados" },
+        { name: "Pastel Soft", theory: "Baja saturación para delicadeza y modernidad" },
+        { name: "Earth Tones", theory: "Orgánicos, naturales y confiables" },
+        { name: "High Contrast B&W", theory: "Blanco y negro puro con un solo acento" },
+        { name: "Royal & Gold", theory: "Azules profundos y dorados para lujo" },
+        { name: "Sunset Gradient", theory: "Cálidos intensos (naranjas, rosas, púrpuras)" },
+        { name: "Oceanic Depths", theory: "Azules y verdes marinos profundos" },
+        { name: "Forest & Moss", theory: "Verdes variados con toques tierra" },
+        { name: "Desert Warmth", theory: "Terracotas, arenas y ocres" },
+        { name: "Industrial Concrete", theory: "Grises fríos con seguridad naranja o amarillo" },
+        { name: "Retro 80s", theory: "Violetas, magentas y cianes sintéticos" },
+        { name: "Minimalist Nordic", theory: "Blancos rotos, grises claros y madera" },
+        { name: "Pop Art Bold", theory: "Primarios saturados y contornos fuertes" },
+        { name: "Dark Mode UI", theory: "Grises muy oscuros con acentos luminosos" }
+    ];
+
+    // --- INIT ---
+    document.addEventListener('DOMContentLoaded', () => {
+        populateSelect('category', categories);
+        populateSelect('palette', palettes.map(p => p.name));
+        loadHistory();
+        
+        // Listener para actualizar colores cuando cambia la paleta (simulado)
+        document.getElementById('palette').addEventListener('change', updateColorPreview);
+    });
+
+    function populateSelect(id, items) {
+        const select = document.getElementById(id);
+        items.forEach(item => {
+            const option = document.createElement('option');
+            option.value = typeof item === 'string' ? item : item.name;
+            option.textContent = typeof item === 'string' ? item : `${item.name} (${item.theory})`;
+            select.appendChild(option);
+        });
+    }
+
+    function toggleAdvanced() {
+        const el = document.getElementById('advanced-options');
+        el.classList.toggle('active');
+    }
+
+    function updateColorPreview() {
+        // En una app real, esto cargaría hex específicos. 
+        // Aquí randomizamos ligeramente para dar feedback visual de cambio.
+        const paletteName = document.getElementById('palette').value;
+        if(!paletteName) return;
+        
+        // Simulación de asignación de colores basada en la selección
+        // Esto es solo para demo, el usuario puede editar manualmente después
+        const colors = generatePaletteFromName(paletteName);
+        document.getElementById('color-base').value = colors[0];
+        document.getElementById('color-structure').value = colors[1];
+        document.getElementById('color-accent1').value = colors[2];
+        document.getElementById('color-accent2').value = colors[3];
+        document.getElementById('color-neutral').value = colors[4];
+    }
+
+    function generatePaletteFromName(name) {
+        // Lógica simple para asignar colores iniciales según el nombre de la paleta
+        // En producción esto sería un objeto de mapeo completo
+        if(name.includes("Neon")) return ["#0f0f0f", "#1a1a1a", "#00ff99", "#ff00ff", "#333333"];
+        if(name.includes("Earth")) return ["#f5f5dc", "#8b4513", "#556b2f", "#d2691e", "#a0826d"];
+        if(name.includes("Ocean")) return ["#f0f8ff", "#4682b4", "#00ced1", "#191970", "#778899"];
+        if(name.includes("Royal")) return ["#002366", "#1a1a1a", "#ffd700", "#c0c0c0", "#4a4a4a"];
+        // Default genérico agradable
+        return ["#ffffff", "#2d3748", "#38bdf8", "#f56565", "#a0aec0"];
+    }
+
+    // --- CORE LOGIC ---
+    function generatePrompt() {
+        const topic = document.getElementById('topic').value.trim();
+        const format = document.getElementById('format').value;
+        const category = document.getElementById('category').value;
+        const paletteName = document.getElementById('palette').value;
+
+        if (!topic || !category || !paletteName) {
+            alert("Por favor completa la temática, categoría y estilo de paleta.");
+            return;
+        }
+
+        // Obtener colores personalizados
+        const colors = {
+            base: document.getElementById('color-base').value,
+            structure: document.getElementById('color-structure').value,
+            accent1: document.getElementById('color-accent1').value,
+            accent2: document.getElementById('color-accent2').value,
+            neutral: document.getElementById('color-neutral').value
+        };
+
+        const systemPrompt = buildMasterPrompt(topic, format, category, paletteName, colors);
+        
+        // Mostrar resultado
+        const outputDiv = document.getElementById('prompt-result');
+        outputDiv.textContent = systemPrompt;
+        
+        // Guardar en historial
+        saveToHistory({ topic, category, palette: paletteName, date: new Date().toLocaleTimeString() });
+    }
+
+    function buildMasterPrompt(topic, format, category, paletteName, colors) {
+        return `Eres un director creativo de nivel mundial con 20 años de experiencia en diseño de identidad visual, presentaciones de alto impacto, infografías editoriales y comunicación visual estratégica para marcas Fortune 500.
+
+TU OBJETIVO: Transformar la idea del usuario en un PROMPT MAESTRO DE DISEÑO para ${format.toUpperCase()} sobre "${topic}".
+CATEGORÍA SELECCIONADA: ${category}
+ESTILO CROMÁTICO: ${paletteName}
+
+--- ARQUITECTURA DEL PROMPT GENERADO ---
+
+BLOQUE 1 — CONCEPTO CENTRAL Y METÁFORA VISUAL DOMINANTE
+No describas el tema superficialmente. REIMAGÍNALO bajo la lente de "${category}".
+- Define la metáfora visual central única.
+- Establece la tensión visual (ej. clásico vs moderno).
+- Describe la emoción inmediata.
+
+BLOQUE 2 — SISTEMA CROMÁTICO PERSONALIZADO
+Usa EXACTAMENTE esta configuración de colores con roles narrativos:
+1. BASE (${colors.base}): Usado para fondos dominantes o espacios de respiro.
+2. ESTRUCTURA (${colors.structure}): Para líneas guía, bordes y jerarquía secundaria.
+3. ACENTO PRIMARIO (${colors.accent1}): El color protagonista para CTAs y datos clave.
+4. ACENTO DE CONTRASTE (${colors.accent2}): Uso esporádico (máx 5%) para shock visual.
+5. NEUTRO FUNCIONAL (${colors.neutral}): Para textos secundarios y elementos de soporte.
+Instrucción: Aplica teoría del color ${paletteName} para armonizar estos valores hexadecimales específicos.
+
+BLOQUE 3 — SISTEMA TIPOGRÁFICO CON CARÁCTER
+- Pareja principal: Display (impacto) + Cuerpo (legibilidad). Evita fuentes genéricas.
+- Define pesos, tracking y el "momento estelar" tipográfico donde la letra es imagen.
+
+BLOQUE 4 — ELEMENTOS GRÁFICOS ÚNICOS (NO STOCK)
+Define 5 elementos visuales propios de este proyecto conceptual.
+- Describe su forma, función narrativa y evolución visual.
+
+BLOQUE 5 — COMPOSICIÓN Y ESPACIO
+- Regla de distribución (ej. asimétrica, diagonal).
+- Tratamiento del espacio negativo.
+- El "elemento roto": qué regla se romperá intencionalmente.
+
+BLOQUE 6 — ESTRUCTURA NARRATIVA (STORYBOARD)
+Genera una tabla detallada para ${format === 'presentacion' ? '10 slides' : format === 'infografia' ? 'secciones verticales' : 'escenas de video'}:
+| # | Título | Concepto Visual | Elemento Dominante | Tono Emocional |
+(Incluye apertura de impacto, slides de alto contraste y cierre resonante).
+
+BLOQUE 7 — DIFERENCIADORES ABSOLUTOS
+- Lo que este diseño NUNCA hará.
+- Las 3 decisiones arriesgadas que lo hacen memorable.
+
+BLOQUE 8 — TAGS CONCEPTUALES
+Lista de tags de estilo y concepto para refinamiento final.
+
+REGLAS DE EJECUCIÓN:
+1. Sé radical, no seguro.
+2. Usa los códigos HEX proporcionados estrictamente.
+3. El tono debe ser de autoridad creativa.
+4. Formato de salida: Markdown estructurado y listo para copiar.`;
+    }
+
+    // --- HISTORY & UTILS ---
+    function saveToHistory(item) {
+        let history = JSON.parse(localStorage.getItem('promptHistory') || '[]');
+        history.unshift(item);
+        if (history.length > 20) history.pop();
+        localStorage.setItem('promptHistory', JSON.stringify(history));
+        loadHistory();
+    }
+
+    function loadHistory() {
+        const list = document.getElementById('history-list');
+        const history = JSON.parse(localStorage.getItem('promptHistory') || '[]');
+        
+        if (history.length === 0) {
+            list.innerHTML = '<div style="padding: 1rem; color: var(--text-secondary); font-size: 0.8rem; text-align: center;">No hay historial reciente</div>';
+            return;
+        }
+
+        list.innerHTML = '';
+        history.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `
+                <h4>${item.topic}</h4>
+                <span>${item.category} • ${item.date}</span>
+            `;
+            div.onclick = () => {
+                document.getElementById('topic').value = item.topic;
+                // Intentar seleccionar categoría si existe
+                const catSelect = document.getElementById('category');
+                for(let i=0; i<catSelect.options.length; i++) {
+                    if(catSelect.options[i].value === item.category) {
+                        catSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            };
+            list.appendChild(div);
+        });
+    }
+
+    function copyToClipboard() {
+        const text = document.getElementById('prompt-result').textContent;
+        if (text.includes("El prompt generado aparecerá aquí")) return;
+        
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.querySelector('.btn-copy');
+            const originalText = btn.textContent;
+            btn.textContent = "¡Copiado!";
+            setTimeout(() => btn.textContent = originalText, 2000);
+        });
+    }
+
+    function downloadPrompt() {
+        const text = document.getElementById('prompt-result').textContent;
+        if (text.includes("El prompt generado aparecerá aquí")) return;
+
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `notebooklm-prompt-${Date.now()}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+</script>
+
+</body>
+</html>
